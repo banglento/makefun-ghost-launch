@@ -26,8 +26,22 @@ function fail(reason: string): never {
 
 // The gate's shape rules for a hand-in file: the mint is a base58 Solana address of
 // 32 to 44 characters and the create signature is base58 of 64 to 88 characters.
+// Length alone is not enough: every character must come from the base58 alphabet
+// (no 0, O, I or l), so a mistyped or padded value is refused here instead of
+// being handed to the gate.
+const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+const BASE58_CHARS = new Set(BASE58_ALPHABET);
+
 function hasShape(value: unknown, min: number, max: number): boolean {
-  return typeof value === 'string' && value.length >= min && value.length <= max;
+  if (typeof value !== 'string' || value.length < min || value.length > max) {
+    return false;
+  }
+  for (const ch of value) {
+    if (!BASE58_CHARS.has(ch)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 const sourcePath = join(BOT_DIR, LAUNCH_FILE);
